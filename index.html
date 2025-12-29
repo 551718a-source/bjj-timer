@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BJJ Drill Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#121212">
+    
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --accent: #3498db; --green: #2ecc71; --red: #e74c3c; --yellow: #f1c40f; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; padding-bottom: 120px; }
+        
+        /* メイン表示 */
+        .dashboard { text-align: center; margin-bottom: 20px; }
+        #total-counter { font-size: 14px; color: #888; margin-bottom: 5px; }
+        #total-num { color: var(--yellow); font-weight: bold; font-size: 18px; }
+
+        .timer-card { 
+            background: var(--card); padding: 30px 20px; border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 2px solid #333; transition: border-color 0.3s;
+        }
+        /* 状態によって枠の色を変える */
+        .mode-work { border-color: var(--green); }
+        .mode-rest { border-color: var(--red); }
+
+        #status-badge { 
+            display: inline-block; padding: 5px 12px; border-radius: 20px; 
+            font-size: 12px; font-weight: bold; margin-bottom: 10px; background: #333;
+        }
+        .mode-work #status-badge { background: var(--green); color: black; }
+        .mode-rest #status-badge { background: var(--red); color: white; }
+
+        #drill-display { font-size: 28px; font-weight: bold; margin: 10px 0; min-height: 1.2em; line-height: 1.3; }
+        #timer { font-size: 80px; font-weight: 200; margin: 5px 0; font-variant-numeric: tabular-nums; letter-spacing: -2px; }
+
+        /* 設定エリア */
+        .settings-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; color: #aaa; font-size: 14px; }
+        .input-group { display: flex; flex-direction: column; align-items: center; }
+        .time-input { 
+            background: #333; border: 1px solid #555; color: white; border-radius: 8px; 
+            padding: 8px; width: 60px; font-size: 18px; text-align: center; margin-top: 5px;
+        }
+
+        /* ボタン */
+        button { border: none; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; transition: opacity 0.2s; }
+        button:active { opacity: 0.8; transform: scale(0.98); }
+        .btn-large { width: 100%; font-size: 22px; margin-bottom: 10px; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+        .btn-start { background: var(--accent); }
+        .btn-start.pause { background: #e67e22; }
+        .btn-next { background: #34495e; width: 100%; padding: 12px; }
+        
+        /* 下部エリア */
+        .section { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 20px; }
+        h3 { margin: 0 0 10px 0; font-size: 16px; color: var(--accent); }
+        input[type="text"], textarea { width: 100%; background: #2a2a2a; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { background: #252525; padding: 10px; border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .del-btn { background: var(--red); padding: 5px 10px; font-size: 12px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div id="total-counter">Today's Total: <span id="total-num">0</span> sets</div>
+        
+        <div class="timer-card mode-work" id="timer-card">
+            <span id="status-badge">WORK</span>
+            <div id="drill-display">Ready?</div>
+            <div id="timer">00:00</div>
+
+            <div class="settings-row">
+                <div class="input-group">
+                    <label>Work</label>
+                    <input type="number" id="work-input" class="time-input" value="30" onchange="saveSettings()">
+                </div>
+                <div class="input-group">
+                    <label>Rest</label>
+                    <input type="number" id="rest-input" class="time-input" value="10" onchange="saveSettings()">
+                </div>
+            </div>
+
+            <button class="btn-large btn-start" id="btn-start" onclick="toggleTimer()">START</button>
+            <button class="btn-next" onclick="nextDrill(true)">⏩ SKIP / NEXT</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Techniques</h3>
+        <div style="display:flex; gap:5px;">
+            <input type="text" id="new-drill" placeholder="技名を追加...">
+            <button onclick="addDrill()" style="background:var(--green); width:60px;">＋</button>
+        </div>
+        <ul id="drill-list" style="margin-top:10px;"></ul>
+    </div>
+
+    <div class="section">
+        <h3>Training Log</h3>
+        <textarea id="new-memo" rows="2" placeholder="メモを残す..."></textarea>
+        <button onclick="addMemo()" style="background:#555; width:100%; padding:8px;">Save Memo</button>
+        <ul id="memo-list" style="margin-top:10px;"></ul>
+    </div>
+
+    <script>
+        // PWA登録
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(console.error);
+
+        // --- 設定読み込み ---
+        let myDrills = JSON.parse(localStorage.getItem('myDrills')) || ["エビ", "三角絞め", "パスガード"];
+        let myMemos = JSON.parse(localStorage.getItem('myMemos')) || [];
+        let workTime = parseInt(localStorage.getItem('workTime')) || 30;
+        let restTime = parseInt(localStorage.getItem('restTime')) || 10;
+        
+        // 今日のカウント（日付が変わったらリセット）
+        let savedDate = localStorage.getItem('lastDate');
+        let todayStr = new Date().toDateString();
+        let totalCount = (savedDate === todayStr) ? parseInt(localStorage.getItem('totalCount')) || 0 : 0;
+        localStorage.setItem('lastDate', todayStr);
+
+        // タイマー変数
+        let timeLeft = workTime;
+        let timerId = null;
+        let isRunning = false;
+        let isResting = false; // 今休憩中か？
+
+        // 初期化
+        document.getElementById('work-input').value = workTime;
+        document.getElementById('rest-input').value = restTime;
+        document.getElementById('total-num').innerText = totalCount;
+        updateTimerDisplay(timeLeft);
+        updateDrillList();
+        updateMemoList();
+
+        // --- ゴング音生成 (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playGong() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'triangle'; // 金属的な音に近い波形
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime); // 高さ
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1.5); // 音程が下がる
+
+            gain.gain.setValueAtTime(1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5); // 余韻
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.5);
+        }
+
+        // --- 設定保存 ---
+        function saveSettings() {
+            let w = parseInt(document.getElementById('work-input').value);
+            let r = parseInt(document.getElementById('rest-input').value);
+            if(w < 1) w = 1; if(r < 0) r = 0;
+            workTime = w; restTime = r;
+            localStorage.setItem('workTime', workTime);
+            localStorage.setItem('restTime', restTime);
+            
+            // 停止中なら表示更新
+            if (!isRunning) {
+                timeLeft = isResting ? restTime : workTime;
+                updateTimerDisplay(timeLeft);
+            }
+        }
+
+        // --- タイマーロジック ---
+        function toggleTimer() {
+            const btn = document.getElementById('btn-start');
+            if (isRunning) {
+                clearInterval(timerId);
+                btn.innerText = "RESUME";
+                btn.classList.remove("pause");
+            } else {
+                playGong(); // スタート時にゴング
+                timerId = setInterval(tick, 1000);
+                btn.innerText = "PAUSE";
+                btn.classList.add("pause");
+            }
+            isRunning = !isRunning;
+        }
+
+        function tick() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateTimerDisplay(timeLeft);
+            } else {
+                // 時間切れ
+                switchMode();
+            }
+        }
+
+        function switchMode() {
+            playGong(); // 切り替え時にゴング
+            
+            if (isResting) {
+                // 休憩終了 -> ワーク開始
+                isResting = false;
+                timeLeft = workTime;
+                nextDrill(); // 次の技へ
+                setModeDisplay('work');
+            } else {
+                // ワーク終了 -> 休憩開始
+                isResting = true;
+                timeLeft = restTime;
+                setModeDisplay('rest');
+                
+                // カウントアップ
+                totalCount++;
+                document.getElementById('total-num').innerText = totalCount;
+                localStorage.setItem('totalCount', totalCount);
+                
+                if(restTime > 0) speak("休憩です");
+                else {
+                    // 休憩0秒なら即次へ
+                    switchMode(); 
+                    return;
+                }
+            }
+        }
+
+        function setModeDisplay(mode) {
+            const card = document.getElementById('timer-card');
+            const badge = document.getElementById('status-badge');
+            
+            if (mode === 'work') {
+                card.className = "timer-card mode-work";
+                badge.innerText = "WORK";
+            } else {
+                card.className = "timer-card mode-rest";
+                badge.innerText = "REST";
+                document.getElementById('drill-display').innerText = "休憩 / Interval";
+            }
+            updateTimerDisplay(timeLeft);
+        }
+
+        function nextDrill(manual = false) {
+            // 手動スキップ時はモードをWorkに戻す
+            if (manual) {
+                isResting = false;
+                timeLeft = workTime;
+                setModeDisplay('work');
+                if(!isRunning) updateTimerDisplay(timeLeft);
+            }
+
+            if (myDrills.length === 0) return;
+            const randomDrill = myDrills[Math.floor(Math.random() * myDrills.length)];
+            document.getElementById('drill-display').innerText = randomDrill;
+            
+            // 休憩中でなければ読み上げ
+            if (!isResting) {
+                const uttr = new SpeechSynthesisUtterance(randomDrill);
+                uttr.lang = 'ja-JP';
+                window.speechSynthesis.speak(uttr);
+            }
+        }
+
+        function updateTimerDisplay(s) {
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            document.getElementById('timer').innerText = `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+
+        // --- データ管理系 (前回と同じ) ---
+        function addDrill() {
+            const input = document.getElementById('new-drill');
+            if (!input.value) return;
+            myDrills.push(input.value);
+            input.value = "";
+            localStorage.setItem('myDrills', JSON.stringify(myDrills));
+            updateDrillList();
+        }
+        function deleteDrill(i) {
+            myDrills.splice(i, 1);
+            localStorage.setItem('myDrills', JSON.stringify(myDrills));
+            updateDrillList();
+        }
+        function updateDrillList() {
+            const list = document.getElementById('drill-list');
+            list.innerHTML = "";
+            myDrills.forEach((d, i) => list.innerHTML += `<li>${d} <button class="del-btn" onclick="deleteDrill(${i})">Del</button></li>`);
+        }
+        function addMemo() {
+            const text = document.getElementById('new-memo').value;
+            if(!text) return;
+            myMemos.unshift({text, date: new Date().toLocaleDateString()});
+            document.getElementById('new-memo').value = "";
+            localStorage.setItem('myMemos', JSON.stringify(myMemos));
+            updateMemoList();
+        }
+        function updateMemoList() {
+            const list = document.getElementById('memo-list');
+            list.innerHTML = "";
+            myMemos.forEach((m, i) => list.innerHTML += `<li style="display:block; font-size:12px; color:#aaa;">${m.date}<div style="color:white; font-size:14px;">${m.text}</div></li>`);
+        }
+        function speak(text) {
+            const uttr = new SpeechSynthesisUtterance(text);
+            uttr.lang = 'ja-JP';
+            window.speechSynthesis.speak(uttr);
+        }
+    </script>
+</body>
+</html>
