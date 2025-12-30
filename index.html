@@ -6,203 +6,152 @@
     <title>BJJ Drill Pro</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#000000">
     
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --accent: #3498db; --green: #2ecc71; --red: #e74c3c; --yellow: #f1c40f; }
-        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
+        :root { --bg: #000000; --card: #161616; --accent: #3498db; --green: #2ecc71; --red: #e74c3c; --yellow: #f1c40f; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         
-        .dashboard { text-align: center; margin-bottom: 20px; }
-        #total-counter { font-size: 13px; color: #888; margin-bottom: 5px; }
-        #total-num { color: var(--yellow); font-weight: bold; font-size: 16px; }
+        .dashboard { text-align: center; margin-bottom: 20px; margin-top: 5px; }
 
         .timer-card { 
-            background: var(--card); padding: 25px 15px; border-radius: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid #333; transition: border-color 0.3s;
+            background: var(--card); padding: 35px 15px; border-radius: 24px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8); border: 1px solid #333; transition: border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .mode-work { border-color: var(--green); }
-        .mode-rest { border-color: var(--red); }
+        .mode-work { border-color: var(--green); box-shadow: 0 0 15px rgba(46, 204, 113, 0.2); }
+        .mode-rest { border-color: var(--red); box-shadow: 0 0 15px rgba(231, 76, 60, 0.2); }
 
         #status-badge { 
-            display: inline-block; padding: 4px 12px; border-radius: 20px; 
-            font-size: 12px; font-weight: bold; margin-bottom: 5px; background: #333;
+            display: inline-block; padding: 4px 16px; border-radius: 20px; 
+            font-size: 13px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px;
         }
         .mode-work #status-badge { background: var(--green); color: black; }
         .mode-rest #status-badge { background: var(--red); color: white; }
 
-        #drill-display { font-size: 42px; font-weight: bold; margin: 10px 0; min-height: 1.2em; line-height: 1.2; word-break: break-word; }
-        #timer { font-size: 80px; font-weight: 200; margin: 0; font-variant-numeric: tabular-nums; letter-spacing: -3px; line-height: 1; }
+        #drill-display { font-size: 46px; font-weight: 900; margin: 15px 0; min-height: 1.2em; line-height: 1.1; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        #timer { font-size: 100px; font-weight: 200; margin: 0; font-variant-numeric: tabular-nums; letter-spacing: -4px; line-height: 1; }
 
-        /* ★プルダウン設定エリア */
-        .settings-row { display: flex; justify-content: center; gap: 15px; margin: 25px 0 15px 0; color: #aaa; font-size: 13px; }
-        .input-group { display: flex; flex-direction: column; align-items: center; background: #2a2a2a; padding: 10px; border-radius: 12px; }
-        .time-select-wrap { display: flex; align-items: center; gap: 4px; margin-top: 5px; }
+        .settings-row { display: flex; justify-content: center; gap: 12px; margin: 25px 0 15px 0; }
+        .input-group { display: flex; flex-direction: column; align-items: center; background: #222; padding: 12px; border-radius: 16px; flex: 1; border: 1px solid #333; }
+        .input-group label { font-size: 11px; color: #888; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+        .time-select-wrap { display: flex; align-items: center; gap: 4px; color: #666; font-size: 14px; }
         
-        /* セレクトボックスの見た目調整 */
         select {
-            background: #444; color: white; border: none; padding: 8px 4px; border-radius: 6px;
-            font-size: 18px; font-weight: bold; appearance: none; -webkit-appearance: none;
-            min-width: 45px; text-align: center;
+            background: #333; color: white; border: 1px solid #444; padding: 8px 6px; border-radius: 8px;
+            font-size: 20px; font-weight: bold; appearance: none; -webkit-appearance: none;
+            min-width: 55px; text-align: center;
         }
 
-        button { border: none; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; transition: opacity 0.2s; touch-action: manipulation; }
-        button:active { opacity: 0.8; transform: scale(0.98); }
-        .btn-large { width: 100%; font-size: 24px; margin-bottom: 10px; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+        button { border: none; color: white; padding: 18px; border-radius: 16px; font-weight: bold; cursor: pointer; font-size: 18px; transition: all 0.1s; touch-action: manipulation; }
+        button:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-large { width: 100%; font-size: 26px; margin-bottom: 12px; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
         .btn-start { background: var(--accent); }
         .btn-start.pause { background: #e67e22; }
 
         .sub-controls { display: flex; gap: 10px; }
-        .btn-sub { flex: 1; padding: 12px; font-size: 14px; }
-        .btn-restart { background: #555; }
-        .btn-finish { background: var(--red); }
+        .btn-sub { flex: 1; padding: 14px; font-size: 15px; color: #ccc; background: #2a2a2a; border: 1px solid #444; }
+        .btn-finish { color: var(--red); border-color: #400; }
         
-        .section { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 20px; }
-        h3 { margin: 0 0 10px 0; font-size: 16px; color: var(--accent); }
-        input[type="text"], textarea { width: 100%; background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .section { background: var(--card); padding: 18px; border-radius: 20px; margin-top: 20px; border: 1px solid #222; }
+        h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--accent); letter-spacing: 1px; }
+        input[type="text"] { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 14px; border-radius: 12px; box-sizing: border-box; font-size: 16px; }
         
-        ul { list-style: none; padding: 0; margin: 0; margin-top: 10px; }
-        li { background: #252525; padding: 8px; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
-        .edit-input { background: transparent; border: none; color: white; font-size: 16px; flex-grow: 1; border-bottom: 1px solid #444; padding: 5px; }
-        .edit-input:focus { border-bottom: 1px solid var(--accent); outline: none; }
-        .del-btn { background: var(--red); padding: 8px 12px; font-size: 12px; border-radius: 6px; flex-shrink: 0; }
+        ul { list-style: none; padding: 0; margin-top: 15px; }
+        li { background: #000; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; border: 1px solid #222; }
+        .edit-input { background: transparent; border: none; color: #fff; font-size: 17px; flex-grow: 1; }
+        .del-btn { background: #222; color: #666; padding: 8px 12px; font-size: 12px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
     <div class="dashboard">
-        <div id="total-counter">Today's Total: <span id="total-num">0</span> sets</div>
-        
         <div class="timer-card mode-work" id="timer-card">
             <span id="status-badge">WORK</span>
-            <div id="drill-display">Ready?</div>
+            <div id="drill-display">Tap Start</div>
             <div id="timer">00:00</div>
 
             <div class="settings-row">
                 <div class="input-group">
-                    <label>Work Time</label>
+                    <label>Work</label>
                     <div class="time-select-wrap">
-                        <select id="work-min" onchange="saveSettings()"></select> m
-                        <select id="work-sec" onchange="saveSettings()"></select> s
+                        <select id="work-min" onchange="saveSettings()"></select>
+                        <select id="work-sec" onchange="saveSettings()"></select>
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>Rest Time</label>
+                    <label>Rest</label>
                     <div class="time-select-wrap">
-                        <select id="rest-min" onchange="saveSettings()"></select> m
-                        <select id="rest-sec" onchange="saveSettings()"></select> s
+                        <select id="rest-min" onchange="saveSettings()"></select>
+                        <select id="rest-sec" onchange="saveSettings()"></select>
                     </div>
                 </div>
             </div>
 
             <button class="btn-large btn-start" id="btn-start" onclick="toggleTimer()">START</button>
             <div class="sub-controls">
-                <button class="btn-sub btn-restart" onclick="restartRound()">🔄 RESTART</button>
-                <button class="btn-sub btn-finish" onclick="finishRound()">⏭️ FINISH (0s)</button>
+                <button class="btn-sub" onclick="restartRound()">🔄 RESTART</button>
+                <button class="btn-sub btn-finish" onclick="finishRound()">⏭️ SKIP (0s)</button>
             </div>
         </div>
     </div>
 
     <div class="section">
         <h3>Techniques</h3>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="new-drill" placeholder="新しい技を追加...">
-            <button onclick="addDrill()" style="background:var(--green); width:60px; font-size:20px;">＋</button>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="new-drill" placeholder="Add Technique...">
+            <button onclick="addDrill()" style="background:var(--green); width:65px; color:#000; font-size:24px;">+</button>
         </div>
         <ul id="drill-list"></ul>
     </div>
 
-    <div class="section">
-        <h3>Training Log</h3>
-        <textarea id="new-memo" rows="2" placeholder="メモを残す..."></textarea>
-        <button onclick="addMemo()" style="background:#555; width:100%; padding:8px;">Save Memo</button>
-        <ul id="memo-list"></ul>
-    </div>
-
     <script>
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(console.error);
+        // --- 画面スリープ防止 ---
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+        }
 
-        // --- プルダウンの選択肢を生成 ---
         function setupSelects() {
-            const wMin = document.getElementById('work-min');
-            const wSec = document.getElementById('work-sec');
-            const rMin = document.getElementById('rest-min');
-            const rSec = document.getElementById('rest-sec');
-
-            // 分の選択肢 (0〜10)
-            for (let i = 0; i <= 10; i++) {
-                wMin.options.add(new Option(i, i));
-                rMin.options.add(new Option(i, i));
-            }
-            // 秒の選択肢 (0〜50、10秒単位)
-            for (let i = 0; i <= 50; i += 10) {
-                wSec.options.add(new Option(i, i));
-                rSec.options.add(new Option(i, i));
-            }
+            const wMin = document.getElementById('work-min'), wSec = document.getElementById('work-sec'),
+                  rMin = document.getElementById('rest-min'), rSec = document.getElementById('rest-sec');
+            for (let i = 0; i <= 10; i++) { wMin.options.add(new Option(i+'m', i)); rMin.options.add(new Option(i+'m', i)); }
+            for (let i = 0; i <= 50; i += 10) { wSec.options.add(new Option(i+'s', i)); rSec.options.add(new Option(i+'s', i)); }
         }
         setupSelects();
 
-        // --- データ読み込み ---
-        let myDrills = JSON.parse(localStorage.getItem('myDrills')) || ["エビ", "三角絞め", "パスガード"];
-        let myMemos = JSON.parse(localStorage.getItem('myMemos')) || [];
+        let myDrills = JSON.parse(localStorage.getItem('myDrills')) || ["Shrimp", "Triangle", "Guard Pass"];
         let workTotalSec = parseInt(localStorage.getItem('workTotalSec')) || 30;
         let restTotalSec = parseInt(localStorage.getItem('restTotalSec')) || 10;
-        
-        let savedDate = localStorage.getItem('lastDate');
-        let todayStr = new Date().toDateString();
-        let totalCount = (savedDate === todayStr) ? parseInt(localStorage.getItem('totalCount')) || 0 : 0;
-        localStorage.setItem('lastDate', todayStr);
+        let timeLeft = workTotalSec, timerId = null, isRunning = false, isResting = false;
 
-        let timeLeft = workTotalSec;
-        let timerId = null;
-        let isRunning = false;
-        let isResting = false;
-
-        // 表示の初期化
         reflectSettingsToSelects();
-        document.getElementById('total-num').innerText = totalCount;
         updateTimerDisplay(timeLeft);
         updateDrillList();
-        updateMemoList();
 
-        // --- ゴング音 ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playGong() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]); // 振動
             const now = audioCtx.currentTime;
-            const freqs = [500, 720, 940];
-            freqs.forEach((f, i) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+            [500, 720, 940].forEach((f, i) => {
+                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
                 osc.type = i === 0 ? 'triangle' : 'sine';
                 osc.frequency.setValueAtTime(f, now);
                 osc.frequency.exponentialRampToValueAtTime(f * 0.98, now + 2);
                 gain.gain.setValueAtTime(0.3, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(now + 2.5);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(now + 2.5);
             });
         }
 
-        // --- 設定保存（プルダウンから読み取り） ---
         function saveSettings() {
-            const wm = parseInt(document.getElementById('work-min').value);
-            const ws = parseInt(document.getElementById('work-sec').value);
-            const rm = parseInt(document.getElementById('rest-min').value);
-            const rs = parseInt(document.getElementById('rest-sec').value);
-
-            workTotalSec = (wm * 60) + ws;
-            restTotalSec = (rm * 60) + rs;
+            workTotalSec = (parseInt(document.getElementById('work-min').value)*60) + parseInt(document.getElementById('work-sec').value);
+            restTotalSec = (parseInt(document.getElementById('rest-min').value)*60) + parseInt(document.getElementById('rest-sec').value);
             if(workTotalSec < 1) workTotalSec = 1;
-
             localStorage.setItem('workTotalSec', workTotalSec);
             localStorage.setItem('restTotalSec', restTotalSec);
-
-            if (!isRunning) {
-                timeLeft = isResting ? restTotalSec : workTotalSec;
-                updateTimerDisplay(timeLeft);
-            }
+            if (!isRunning) { timeLeft = isResting ? restTotalSec : workTotalSec; updateTimerDisplay(timeLeft); }
         }
 
         function reflectSettingsToSelects() {
@@ -212,138 +161,72 @@
             document.getElementById('rest-sec').value = (Math.floor((restTotalSec % 60) / 10) * 10);
         }
 
-        // --- タイマー操作 ---
         function toggleTimer() {
             const btn = document.getElementById('btn-start');
             if (isRunning) {
                 clearInterval(timerId);
-                btn.innerText = "RESUME";
-                btn.classList.remove("pause");
+                btn.innerText = "RESUME"; btn.classList.remove("pause");
+                if (wakeLock) wakeLock.release();
             } else {
-                if(!isRunning && timeLeft > 0 && timeLeft === (isResting ? restTotalSec : workTotalSec)) playGong();
+                requestWakeLock();
+                if(timeLeft === (isResting ? restTotalSec : workTotalSec)) playGong();
                 timerId = setInterval(tick, 1000);
-                btn.innerText = "PAUSE";
-                btn.classList.add("pause");
+                btn.innerText = "PAUSE"; btn.classList.add("pause");
             }
             isRunning = !isRunning;
         }
 
         function tick() {
-            if (timeLeft > 0) {
-                timeLeft--;
-                updateTimerDisplay(timeLeft);
-            } else {
-                switchMode();
-            }
+            if (timeLeft > 0) { timeLeft--; updateTimerDisplay(timeLeft); } 
+            else { switchMode(); }
         }
 
         function switchMode() {
             playGong();
-            if (isResting) {
-                isResting = false;
-                timeLeft = workTotalSec;
-                nextDrill(); 
-                setModeDisplay('work');
-            } else {
-                isResting = true;
-                timeLeft = restTotalSec;
-                setModeDisplay('rest');
-                totalCount++;
-                document.getElementById('total-num').innerText = totalCount;
-                localStorage.setItem('totalCount', totalCount);
-                if(restTotalSec > 0) speak("休憩です");
-                else { switchMode(); return; }
+            if (isResting) { isResting = false; timeLeft = workTotalSec; nextDrill(); setModeDisplay('work'); } 
+            else { isResting = true; timeLeft = restTotalSec; setModeDisplay('rest'); 
+                   if(restTotalSec > 0) speak("Rest"); else { switchMode(); return; }
             }
         }
 
         function setModeDisplay(mode) {
-            const card = document.getElementById('timer-card');
-            const badge = document.getElementById('status-badge');
-            if (mode === 'work') {
-                card.className = "timer-card mode-work";
-                badge.innerText = "WORK";
-            } else {
-                card.className = "timer-card mode-rest";
-                badge.innerText = "REST";
-                document.getElementById('drill-display').innerText = "Interval";
-            }
+            const card = document.getElementById('timer-card'), badge = document.getElementById('status-badge');
+            card.className = "timer-card " + (mode === 'work' ? "mode-work" : "mode-rest");
+            badge.innerText = mode.toUpperCase();
+            if(mode === 'rest') document.getElementById('drill-display').innerText = "REST";
             updateTimerDisplay(timeLeft);
         }
 
-        function restartRound() {
-            timeLeft = isResting ? restTotalSec : workTotalSec;
-            updateTimerDisplay(timeLeft);
-        }
-
-        function finishRound() {
-            timeLeft = 0;
-            updateTimerDisplay(0);
-            setTimeout(() => { switchMode(); }, 100);
-        }
+        function restartRound() { timeLeft = isResting ? restTotalSec : workTotalSec; updateTimerDisplay(timeLeft); }
+        function finishRound() { timeLeft = 0; updateTimerDisplay(0); setTimeout(switchMode, 100); }
 
         function nextDrill() {
             if (myDrills.length === 0) return;
-            const randomDrill = myDrills[Math.floor(Math.random() * myDrills.length)];
-            document.getElementById('drill-display').innerText = randomDrill;
-            if (!isResting) {
-                const uttr = new SpeechSynthesisUtterance(randomDrill);
-                uttr.lang = 'ja-JP';
-                window.speechSynthesis.speak(uttr);
-            }
+            const drill = myDrills[Math.floor(Math.random() * myDrills.length)];
+            document.getElementById('drill-display').innerText = drill;
+            if (!isResting) speak(drill);
         }
 
         function updateTimerDisplay(s) {
-            const m = Math.floor(s / 60);
-            const sec = s % 60;
+            const m = Math.floor(s / 60), sec = s % 60;
             document.getElementById('timer').innerText = `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         }
 
-        // --- データ管理 ---
         function addDrill() {
             const input = document.getElementById('new-drill');
             if (!input.value) return;
-            myDrills.push(input.value);
-            input.value = "";
-            saveDrills();
-            updateDrillList();
+            myDrills.push(input.value); input.value = ""; saveDrills(); updateDrillList();
         }
-        function editDrill(index, newValue) {
-            myDrills[index] = newValue;
-            saveDrills();
-        }
-        function deleteDrill(i) {
-            if(confirm('削除しますか？')) {
-                myDrills.splice(i, 1);
-                saveDrills();
-                updateDrillList();
-            }
-        }
+        function editDrill(i, v) { myDrills[i] = v; saveDrills(); }
+        function deleteDrill(i) { if(confirm('Delete?')) { myDrills.splice(i, 1); saveDrills(); updateDrillList(); } }
         function saveDrills() { localStorage.setItem('myDrills', JSON.stringify(myDrills)); }
         function updateDrillList() {
-            const list = document.getElementById('drill-list');
-            list.innerHTML = "";
+            const list = document.getElementById('drill-list'); list.innerHTML = "";
             myDrills.forEach((d, i) => {
-                list.innerHTML += `<li><input class="edit-input" value="${d}" onchange="editDrill(${i}, this.value)"><button class="del-btn" onclick="deleteDrill(${i})">削除</button></li>`;
+                list.innerHTML += `<li><input class="edit-input" value="${d}" onchange="editDrill(${i}, this.value)"><button class="del-btn" onclick="deleteDrill(${i})">×</button></li>`;
             });
         }
-        function addMemo() {
-            const text = document.getElementById('new-memo').value;
-            if(!text) return;
-            myMemos.unshift({text, date: new Date().toLocaleDateString()});
-            document.getElementById('new-memo').value = "";
-            localStorage.setItem('myMemos', JSON.stringify(myMemos));
-            updateMemoList();
-        }
-        function updateMemoList() {
-            const list = document.getElementById('memo-list');
-            list.innerHTML = "";
-            myMemos.forEach((m) => list.innerHTML += `<li style="display:block; font-size:12px; color:#aaa;">${m.date}<div style="color:white; font-size:14px; margin-top:4px;">${m.text}</div></li>`);
-        }
-        function speak(text) {
-            const uttr = new SpeechSynthesisUtterance(text);
-            uttr.lang = 'ja-JP';
-            window.speechSynthesis.speak(uttr);
-        }
+        function speak(t) { const u = new SpeechSynthesisUtterance(t); u.lang = 'ja-JP'; window.speechSynthesis.speak(u); }
     </script>
 </body>
 </html>
